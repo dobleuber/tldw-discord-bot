@@ -24,38 +24,38 @@ A Discord bot that generates summaries of YouTube videos, web pages, and Twitter
 - `tests.py`: Unit tests for the bot functionality
 - `pyproject.toml`: Project configuration and dependencies
 
-## Ejecución
+## Running the Bot
 
-### Método 1: Ejecución local
+### Method 1: Local Execution
 
-Para ejecutar el bot localmente, sigue estos pasos:
+To run the bot locally, follow these steps:
 
-1. Clona este repositorio
-2. Crea un archivo `.env` basado en el archivo `.env.example` y añade tus tokens
-3. Instala las dependencias con `pip install -e .`
-4. Ejecuta el bot con `python main.py`
+1. Clone this repository
+2. Create a `.env` file based on the `.env.example` file and add your tokens
+3. Install dependencies with `pip install -e .`
+4. Run the bot with `python main.py`
 
-### Método 2: Ejecución con Docker (recomendado)
+### Method 2: Docker Execution (recommended)
 
-Para ejecutar el bot con Docker, sigue estos pasos:
+To run the bot with Docker, follow these steps:
 
-1. Clona este repositorio
-2. Crea un archivo `.env` basado en el archivo `.env.example` y añade tus tokens
-3. Construye y ejecuta los contenedores con Docker Compose:
+1. Clone this repository
+2. Create a `.env` file based on the `.env.example` file and add your tokens
+3. Build and run the containers with Docker Compose:
 
 ```bash
 docker-compose up -d
 ```
 
-Esto iniciará el bot y un servidor Redis para la caché en contenedores separados.
+This will start the bot and a Redis server for caching in separate containers.
 
-Para ver los logs del bot:
+To view the bot logs:
 
 ```bash
 docker-compose logs -f tldw-bot
 ```
 
-Para detener los contenedores:
+To stop the containers:
 
 ```bash
 docker-compose down
@@ -81,9 +81,9 @@ docker-compose down
 
 Once the bot is running and added to your Discord server, you can use the following commands:
 
-- `!tldw [url]`: Generate a summary of a YouTube video
-- `!tldr [url]`: Generate a summary of a web page or Twitter thread
-- `!help`: Display help information
+- `/tldw [url]`: Generate a summary of a YouTube video
+- `/tldr [url]`: Generate a summary of a web page or Twitter thread
+- `/info`: Display help information
 
 If you don't provide a URL, the bot will search for the last message with a relevant link.
 
