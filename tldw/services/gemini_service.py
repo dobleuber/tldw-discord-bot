@@ -47,7 +47,7 @@ async def generate_summary_with_gemini(transcript: str) -> str:
     
     # Create a prompt for the summary
     prompt = f"""Please provide a concise summary of the following transcript from a YouTube video. 
-    Focus on the main points and key takeaways. Format the summary as bullet points.
+    Focus on the main points and key takeaways. Format the summary as bullet points, omit any sponsorship messages, and self promote: subscribe to our channel, etc.
     
     TRANSCRIPT:
     {transcript}
