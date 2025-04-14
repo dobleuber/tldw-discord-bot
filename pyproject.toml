@@ -1,7 +1,14 @@
 [project]
 name = "tldw"
 version = "0.1.0"
-description = "Add your description here"
+description = "Bot de Discord que genera resúmenes de videos de YouTube, páginas web y hilos de Twitter utilizando Gemini AI"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "discord.py",
+    "python-dotenv",
+    "google-generativeai",
+    "markitdown",
+    "pytest",
+    "pytest-asyncio"
+]
