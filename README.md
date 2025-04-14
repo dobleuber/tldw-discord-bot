@@ -24,6 +24,43 @@ A Discord bot that generates summaries of YouTube videos, web pages, and Twitter
 - `tests.py`: Unit tests for the bot functionality
 - `pyproject.toml`: Project configuration and dependencies
 
+## Ejecución
+
+### Método 1: Ejecución local
+
+Para ejecutar el bot localmente, sigue estos pasos:
+
+1. Clona este repositorio
+2. Crea un archivo `.env` basado en el archivo `.env.example` y añade tus tokens
+3. Instala las dependencias con `pip install -e .`
+4. Ejecuta el bot con `python main.py`
+
+### Método 2: Ejecución con Docker (recomendado)
+
+Para ejecutar el bot con Docker, sigue estos pasos:
+
+1. Clona este repositorio
+2. Crea un archivo `.env` basado en el archivo `.env.example` y añade tus tokens
+3. Construye y ejecuta los contenedores con Docker Compose:
+
+```bash
+docker-compose up -d
+```
+
+Esto iniciará el bot y un servidor Redis para la caché en contenedores separados.
+
+Para ver los logs del bot:
+
+```bash
+docker-compose logs -f tldw-bot
+```
+
+Para detener los contenedores:
+
+```bash
+docker-compose down
+```
+
 ## Setup and Installation
 
 1. Clone the repository

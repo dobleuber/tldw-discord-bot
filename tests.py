@@ -109,7 +109,7 @@ class TestTLDWCommand:
     async def test_tldw_command_handler(self):
         """Test that the TLDW command handler processes YouTube URLs correctly."""
         from tldw.commands import handle_tldw_command
-        from unittest.mock import AsyncMock
+        from unittest.mock import AsyncMock, patch, MagicMock
         
         # Create a mock context object
         ctx = AsyncMock()
@@ -117,14 +117,33 @@ class TestTLDWCommand:
         # Test with a valid YouTube URL
         test_url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         
-        # Call the function
-        await handle_tldw_command(ctx, test_url)
-        
-        # Verify that the context's send method was called with an appropriate message
-        ctx.send.assert_called()
-        # The message should contain some indication of processing a YouTube URL
-        call_args = ctx.send.call_args[0][0]
-        assert "YouTube" in call_args or "youtube" in call_args.lower()
+        # Mock the dependencies to avoid actual API calls
+        with patch('tldw.commands.extract_youtube_transcript', new_callable=AsyncMock) as mock_extract, \
+             patch('tldw.commands.generate_summary_with_gemini', new_callable=AsyncMock) as mock_generate, \
+             patch('tldw.commands.get_from_cache', return_value=None) as mock_get_cache, \
+             patch('tldw.commands.add_to_cache') as mock_add_cache:
+            
+            # Configure the mocks
+            mock_extract.return_value = "Sample transcript"
+            mock_generate.return_value = "Sample summary"
+            
+            # Call the function
+            await handle_tldw_command(ctx, test_url)
+            
+            # Verify that extract_youtube_transcript was called
+            mock_extract.assert_called_once_with(test_url)
+            
+            # Verify that generate_summary_with_gemini was called
+            mock_generate.assert_called_once_with("Sample transcript")
+            
+            # Verify that add_to_cache was called
+            mock_add_cache.assert_called_once_with(test_url, "Sample summary")
+            
+            # Verify that the context's send method was called EXACTLY ONCE with the final summary
+            ctx.send.assert_called_once()
+            call_args = ctx.send.call_args[0][0]
+            assert "Summary" in call_args
+            assert "Sample summary" in call_args
         
     async def test_extract_youtube_transcript(self):
         """Test that the YouTube transcript extraction works correctly."""

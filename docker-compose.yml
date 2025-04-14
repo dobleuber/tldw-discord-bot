@@ -1,0 +1,24 @@
+version: '3'
+
+services:
+  tldw-bot:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      - redis
+    environment:
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CACHE_EXPIRATION_HOURS=24
+
+  redis:
+    image: redis:alpine
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+
+volumes:
+  redis-data:

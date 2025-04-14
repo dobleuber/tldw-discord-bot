@@ -9,6 +9,7 @@ dependencies = [
     "python-dotenv",
     "google-generativeai",
     "markitdown",
+    "redis",
     "pytest",
     "pytest-asyncio"
 ]

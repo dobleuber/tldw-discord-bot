@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 
 from tldw.utils.url_utils import is_valid_url, determine_content_type, ContentType
-from tldw.utils.cache_utils import get_from_cache, add_to_cache
+from tldw.utils.redis_cache import get_from_cache, add_to_cache
 from tldw.services.content_service import (
     extract_youtube_transcript,
     extract_twitter_content,
@@ -75,9 +75,6 @@ async def handle_tldw_command(ctx, url: str = None) -> None:
     if cached_summary:
         await ctx.send(f"**Summary of YouTube video:**\n{cached_summary}")
         return
-    
-    # Send a message to indicate that the bot is working
-    await ctx.send(f"Generating summary for YouTube video: {url}...")
     
     try:
         # Extract the transcript

@@ -1,0 +1,26 @@
+# Git
+.git
+.gitignore
+
+# Entornos virtuales y caché de Python
+.venv
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache
+.coverage
+htmlcov/
+
+# Archivos de entorno
+.env
+
+# Archivos de Docker
+Dockerfile
+.dockerignore
+
+# Archivos de desarrollo
+*.log
+*.swp
+.DS_Store
