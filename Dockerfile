@@ -2,26 +2,37 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Instalar dependencias del sistema necesarias para algunas bibliotecas Python
+# Install system dependencies needed for Python libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     python3-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copiar los archivos de requisitos primero para aprovechar la caché de capas de Docker
-COPY pyproject.toml ./
+# Install uv for faster Python package management
+RUN pip install --no-cache-dir uv
 
-# Instalar dependencias
-RUN pip install --no-cache-dir uv && \
-    pip install --no-cache-dir -e . && \
-    pip install --no-cache-dir redis
+# Copy dependency files first to leverage Docker layer caching
+COPY pyproject.toml uv.lock* ./
 
-# Copiar el código del bot
+# Create virtual environment and install dependencies
+RUN uv venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Install project dependencies
+RUN uv pip install -e .
+
+# Copy the bot code
 COPY . .
 
-# Crear un usuario no root para ejecutar el bot
-RUN useradd -m botuser
+# Create a non-root user to run the bot
+RUN useradd -m -u 1000 botuser && \
+    chown -R botuser:botuser /app
 USER botuser
 
-# Comando para ejecutar el bot
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import sys; sys.exit(0)"
+
+# Command to run the bot
 CMD ["python", "main.py"]

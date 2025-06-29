@@ -2,25 +2,60 @@
 .git
 .gitignore
 
-# Entornos virtuales y caché de Python
-.venv
-__pycache__
-*.py[cod]
-*$py.class
-*.so
-.Python
-.pytest_cache
-.coverage
-htmlcov/
-
-# Archivos de entorno
-.env
-
-# Archivos de Docker
+# Docker
 Dockerfile
+docker-compose.yml
 .dockerignore
 
-# Archivos de desarrollo
+# Environment files
+.env
+.env.*
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
+.coverage
+.coverage.*
+.pytest_cache
+nosetests.xml
+coverage.xml
+*.cover
 *.log
+.cache
+
+# Virtual environments
+.venv
+venv/
+ENV/
+env/
+.local
+
+# IDE
+.vscode/
+.idea/
 *.swp
+*.swo
+*~
+
+# OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Documentation
+README.md
+CLAUDE.md
+docs/
+
+# Testing
+tests.py

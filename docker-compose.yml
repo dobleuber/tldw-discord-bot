@@ -1,24 +1,54 @@
-version: '3'
-
 services:
   tldw-bot:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: tldw-discord-bot
     restart: unless-stopped
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     environment:
       - DISCORD_TOKEN=${DISCORD_TOKEN}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - CACHE_EXPIRATION_HOURS=24
+      - CACHE_EXPIRATION_HOURS=${CACHE_EXPIRATION_HOURS:-24}
+      - MESSAGE_HISTORY_LIMIT=${MESSAGE_HISTORY_LIMIT:-5}
+    env_file:
+      - .env
+    networks:
+      - tldw-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   redis:
-    image: redis:alpine
+    image: redis:7-alpine
+    container_name: tldw-redis
     restart: unless-stopped
     volumes:
       - redis-data:/data
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    networks:
+      - tldw-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   redis-data:
+    driver: local
+
+networks:
+  tldw-network:
+    driver: bridge
