@@ -206,5 +206,36 @@ class TestTLDWCommand:
             mock_genai.assert_called_once_with("models/gemini-2.0-flash")
 
 
+class TestMessageUtils(unittest.TestCase):
+    """Tests for message utilities."""
+    
+    def test_extract_urls_from_text(self):
+        """Test URL extraction from text."""
+        from tldw.utils.message_utils import extract_urls_from_text
+        
+        # Test with various URL formats
+        text1 = "Check out this video: https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        urls1 = extract_urls_from_text(text1)
+        self.assertEqual(len(urls1), 1)
+        self.assertIn("youtube.com", urls1[0])
+        
+        # Test with multiple URLs
+        text2 = "Here are some links: https://example.com and www.twitter.com/test"
+        urls2 = extract_urls_from_text(text2)
+        self.assertEqual(len(urls2), 2)
+        
+        # Test with no URLs
+        text3 = "This is just regular text with no links"
+        urls3 = extract_urls_from_text(text3)
+        self.assertEqual(len(urls3), 0)
+        
+    def test_message_history_limit_configuration(self):
+        """Test that message history limit is configurable."""
+        from tldw.utils.message_utils import MESSAGE_HISTORY_LIMIT
+        
+        # Should be an integer (default 5 or from environment)
+        self.assertIsInstance(MESSAGE_HISTORY_LIMIT, int)
+        self.assertGreater(MESSAGE_HISTORY_LIMIT, 0)
+
 if __name__ == "__main__":
     unittest.main()

@@ -20,7 +20,24 @@ if not TOKEN:
 # Create a bot instance
 intents = discord.Intents.default()
 intents.message_content = True
+intents.messages = True
+intents.guilds = True
 bot = commands.Bot(command_prefix="/", intents=intents)
+
+class DeferredContextWrapper:
+    """Wrapper for deferred Discord interactions compatible with legacy command handlers."""
+    def __init__(self, interaction):
+        self.interaction = interaction
+        self.author = interaction.user
+        self.channel = interaction.channel
+    
+    async def send(self, content):
+        try:
+            await self.interaction.followup.send(content)
+        except discord.errors.NotFound:
+            # If interaction expired, try to send to channel directly
+            if self.interaction.channel:
+                await self.interaction.channel.send(content)
 
 @bot.event
 async def on_ready():
@@ -57,17 +74,9 @@ async def tldw(ctx, url: str = None):
 @bot.tree.command(name="tldw", description="Generate a summary of a YouTube video")
 async def tldw_slash(interaction: discord.Interaction, url: str = None):
     """Slash command handler for the TLDW command."""
-    # Create a wrapper for the ctx object that the handler expects
-    class ContextWrapper:
-        def __init__(self, interaction):
-            self.interaction = interaction
-            self.author = interaction.user
-            self.channel = interaction.channel
-        
-        async def send(self, content):
-            await self.interaction.response.send_message(content)
-    
-    ctx_wrapper = ContextWrapper(interaction)
+    # Defer response for longer processing
+    await interaction.response.defer()
+    ctx_wrapper = DeferredContextWrapper(interaction)
     await handle_tldw_command(ctx_wrapper, url)
 
 # Legacy command
@@ -80,17 +89,9 @@ async def tldr(ctx, url: str = None):
 @bot.tree.command(name="tldr", description="Generate a summary of a web page or Twitter thread")
 async def tldr_slash(interaction: discord.Interaction, url: str = None):
     """Slash command handler for the TLDR command."""
-    # Create a wrapper for the ctx object that the handler expects
-    class ContextWrapper:
-        def __init__(self, interaction):
-            self.interaction = interaction
-            self.author = interaction.user
-            self.channel = interaction.channel
-        
-        async def send(self, content):
-            await self.interaction.response.send_message(content)
-    
-    ctx_wrapper = ContextWrapper(interaction)
+    # Defer response for longer processing
+    await interaction.response.defer()
+    ctx_wrapper = DeferredContextWrapper(interaction)
     await handle_tldr_command(ctx_wrapper, url)
 
 def run_bot():

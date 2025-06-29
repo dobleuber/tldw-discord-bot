@@ -7,5 +7,9 @@ This is the main entry point for the bot.
 """
 from tldw.bot import run_bot
 
-if __name__ == "__main__":
+def main():
+    """Entry point for the bot."""
     run_bot()
+
+if __name__ == "__main__":
+    main()

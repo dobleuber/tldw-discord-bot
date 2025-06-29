@@ -13,3 +13,20 @@ dependencies = [
     "pytest",
     "pytest-asyncio"
 ]
+
+[project.scripts]
+tldw = "main:main"
+test = "tldw.scripts:run_tests"
+cov = "tldw.scripts:run_tests_with_coverage"
+start = "tldw.scripts:start_bot"
+
+[project.optional-dependencies]
+dev = [
+    "pytest-cov",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests.py"]
+python_files = ["tests.py"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"

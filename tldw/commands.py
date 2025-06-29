@@ -6,6 +6,7 @@ from discord.ext import commands
 
 from tldw.utils.url_utils import is_valid_url, determine_content_type, ContentType
 from tldw.utils.redis_cache import get_from_cache, add_to_cache
+from tldw.utils.message_utils import find_url_in_recent_messages
 from tldw.services.content_service import (
     extract_youtube_transcript,
     extract_twitter_content,
@@ -46,12 +47,15 @@ async def handle_tldw_command(ctx, url: str = None) -> None:
         ctx: The Discord context.
         url: The URL of the YouTube video to summarize.
     """
-    # If no URL is provided, search for a YouTube URL in previous messages
+    # If no URL is provided, search for a URL in previous messages
     if not url:
-        await ctx.send("No URL provided. Searching for a YouTube URL in previous messages...")
-        # This is a placeholder for future implementation
-        await ctx.send("Feature not yet implemented: searching for URLs in previous messages.")
-        return
+        await ctx.send("No URL provided. Searching for a URL in previous messages...")
+        url = await find_url_in_recent_messages(ctx)
+        if not url:
+            await ctx.send("No URL found in the last 5 messages. Please provide a YouTube URL.")
+            return
+        else:
+            await ctx.send(f"Found URL: {url}")
     
     # Validate the URL
     if not is_valid_url(url):
@@ -104,5 +108,63 @@ async def handle_tldr_command(ctx, url: str = None) -> None:
         ctx: The Discord context.
         url: The URL of the web page or Twitter thread to summarize.
     """
-    # This is a placeholder for future implementation
-    await ctx.send("The TLDR command is not yet implemented.")
+    # If no URL is provided, search for a URL in previous messages
+    if not url:
+        await ctx.send("No URL provided. Searching for a URL in previous messages...")
+        url = await find_url_in_recent_messages(ctx)
+        if not url:
+            await ctx.send("No URL found in the last 5 messages. Please provide a web page or Twitter URL.")
+            return
+        else:
+            await ctx.send(f"Found URL: {url}")
+    
+    # Validate the URL
+    if not is_valid_url(url):
+        await ctx.send(f"Invalid URL: {url}")
+        return
+    
+    # Determine the content type
+    try:
+        content_type = determine_content_type(url)
+    except ValueError:
+        await ctx.send(f"Invalid URL: {url}")
+        return
+    
+    # Check if the URL is a YouTube URL (should use tldw instead)
+    if content_type == ContentType.YOUTUBE:
+        await ctx.send(f"The URL {url} is a YouTube video. Use /tldw for YouTube videos.")
+        return
+    
+    # Check if the summary is already in the cache
+    cached_summary = get_from_cache(url)
+    if cached_summary:
+        content_label = "Twitter thread" if content_type == ContentType.TWITTER else "web page"
+        await ctx.send(f"**Summary of {content_label}:**\n{cached_summary}")
+        return
+    
+    try:
+        # Extract content based on type
+        if content_type == ContentType.TWITTER:
+            content = await extract_twitter_content(url)
+            content_label = "Twitter thread"
+        else:  # ContentType.WEB
+            content = await extract_web_content(url)
+            content_label = "web page"
+        
+        if not content:
+            await ctx.send(f"Could not extract content from the {content_label}.")
+            return
+        
+        # Generate a summary
+        summary = await generate_summary_with_gemini(content)
+        if not summary:
+            await ctx.send(f"Could not generate a summary for the {content_label}.")
+            return
+        
+        # Add the summary to the cache
+        add_to_cache(url, summary)
+        
+        # Send the summary
+        await ctx.send(f"**Summary of {content_label}:**\n{summary}")
+    except Exception as e:
+        await ctx.send(f"An error occurred: {str(e)}")

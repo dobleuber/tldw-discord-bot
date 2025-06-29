@@ -16,7 +16,6 @@ async def extract_youtube_transcript(url: str) -> str:
     result = markitdown.convert(url)
     return result.text_content
 
-# For future implementation
 async def extract_twitter_content(url: str) -> str:
     """Extract content from a Twitter thread.
     
@@ -26,10 +25,10 @@ async def extract_twitter_content(url: str) -> str:
     Returns:
         The content of the Twitter thread as a string.
     """
-    # This is a placeholder for future implementation
-    raise NotImplementedError("Twitter content extraction not yet implemented")
+    markitdown = MarkItDown()
+    result = markitdown.convert(url)
+    return result.text_content
 
-# For future implementation
 async def extract_web_content(url: str) -> str:
     """Extract content from a web page.
     
@@ -39,5 +38,6 @@ async def extract_web_content(url: str) -> str:
     Returns:
         The content of the web page as a string.
     """
-    # This is a placeholder for future implementation
-    raise NotImplementedError("Web content extraction not yet implemented")
+    markitdown = MarkItDown()
+    result = markitdown.convert(url)
+    return result.text_content
