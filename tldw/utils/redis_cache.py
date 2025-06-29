@@ -114,3 +114,145 @@ def add_to_cache(key: str, value: Any) -> None:
 def clear_cache() -> None:
     """Clear all entries from the cache."""
     cache.clear()
+
+# Summary-specific cache functions
+def get_summary_from_cache(channel_id: str, message_hash: str) -> Optional[Any]:
+    """Get a conversation summary from the cache.
+    
+    Args:
+        channel_id: Discord channel ID.
+        message_hash: Hash of the message range.
+        
+    Returns:
+        Cached summary data if it exists, None otherwise.
+    """
+    cache_key = f"summary:{channel_id}:{message_hash}"
+    return cache.get(cache_key)
+
+def add_summary_to_cache(channel_id: str, message_hash: str, summary_data: Any, ttl_hours: int = 2) -> None:
+    """Add a conversation summary to the cache with shorter TTL.
+    
+    Args:
+        channel_id: Discord channel ID.
+        message_hash: Hash of the message range.
+        summary_data: Summary data to cache.
+        ttl_hours: Time to live in hours (default 2 hours for summaries).
+    """
+    cache_key = f"summary:{channel_id}:{message_hash}"
+    
+    # Create a custom cache instance with shorter TTL for summaries
+    if hasattr(cache, 'redis'):
+        ttl_seconds = ttl_hours * 3600
+        if isinstance(summary_data, (dict, list, tuple)):
+            value = json.dumps(summary_data)
+        else:
+            value = summary_data
+        cache.redis.setex(cache_key, ttl_seconds, value)
+    else:
+        # Fallback for non-Redis cache
+        cache.set(cache_key, summary_data)
+
+def get_recent_summary_keys(channel_id: str, limit: int = 10) -> list[str]:
+    """Get recent summary cache keys for a channel.
+    
+    Args:
+        channel_id: Discord channel ID.
+        limit: Maximum number of keys to return.
+        
+    Returns:
+        List of recent summary cache keys.
+    """
+    if hasattr(cache, 'redis'):
+        pattern = f"summary:{channel_id}:*"
+        keys = cache.redis.keys(pattern)
+        return sorted(keys, reverse=True)[:limit]
+    return []
+
+def cleanup_old_summaries(channel_id: str, keep_count: int = 5) -> None:
+    """Clean up old summary cache entries for a channel.
+    
+    Args:
+        channel_id: Discord channel ID.
+        keep_count: Number of recent summaries to keep.
+    """
+    if hasattr(cache, 'redis'):
+        recent_keys = get_recent_summary_keys(channel_id, keep_count * 2)
+        if len(recent_keys) > keep_count:
+            keys_to_delete = recent_keys[keep_count:]
+            if keys_to_delete:
+                cache.redis.delete(*keys_to_delete)
+
+# Rate limiting cache functions
+def get_rate_limit_key(user_id: str, command: str) -> str:
+    """Generate a rate limit cache key.
+    
+    Args:
+        user_id: Discord user ID.
+        command: Command name.
+        
+    Returns:
+        Rate limit cache key.
+    """
+    return f"rate_limit:{command}:{user_id}"
+
+def check_rate_limit(user_id: str, command: str, limit_minutes: int = 5) -> bool:
+    """Check if a user is rate limited for a command.
+    
+    Args:
+        user_id: Discord user ID.
+        command: Command name.
+        limit_minutes: Rate limit window in minutes.
+        
+    Returns:
+        True if user can execute command, False if rate limited.
+    """
+    rate_key = get_rate_limit_key(user_id, command)
+    
+    if hasattr(cache, 'redis'):
+        # Check if key exists
+        if cache.redis.exists(rate_key):
+            return False
+        
+        # Set rate limit with TTL
+        cache.redis.setex(rate_key, limit_minutes * 60, "1")
+        return True
+    else:
+        # For non-Redis cache, always allow (no rate limiting)
+        return True
+
+def get_channel_rate_limit_key(channel_id: str, command: str) -> str:
+    """Generate a channel rate limit cache key.
+    
+    Args:
+        channel_id: Discord channel ID.
+        command: Command name.
+        
+    Returns:
+        Channel rate limit cache key.
+    """
+    return f"rate_limit:channel:{command}:{channel_id}"
+
+def check_channel_rate_limit(channel_id: str, command: str, limit_minutes: int = 2) -> bool:
+    """Check if a channel is rate limited for a command.
+    
+    Args:
+        channel_id: Discord channel ID.
+        command: Command name.
+        limit_minutes: Rate limit window in minutes.
+        
+    Returns:
+        True if channel can execute command, False if rate limited.
+    """
+    rate_key = get_channel_rate_limit_key(channel_id, command)
+    
+    if hasattr(cache, 'redis'):
+        # Check if key exists
+        if cache.redis.exists(rate_key):
+            return False
+        
+        # Set rate limit with TTL
+        cache.redis.setex(rate_key, limit_minutes * 60, "1")
+        return True
+    else:
+        # For non-Redis cache, always allow (no rate limiting)
+        return True

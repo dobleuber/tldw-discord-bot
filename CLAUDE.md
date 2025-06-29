@@ -73,10 +73,13 @@ Required in `.env` file:
 **Fully Implemented:**
 - YouTube video transcript extraction and summarization (`/tldw`)
 - Web page and Twitter thread summarization (`/tldr`)
+- Conversation topic analysis and summarization (`/summary`)
 - Redis caching with comprehensive fallbacks
 - Docker deployment with Redis container
 - Both slash and legacy command support
 - Automatic URL detection in previous messages (searches last 5 messages by default)
+- Rate limiting for summary command (per user and per channel)
+- Intelligent topic identification using Gemini AI with fallbacks
 
 ## Development Notes
 

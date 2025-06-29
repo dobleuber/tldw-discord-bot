@@ -237,5 +237,177 @@ class TestMessageUtils(unittest.TestCase):
         self.assertIsInstance(MESSAGE_HISTORY_LIMIT, int)
         self.assertGreater(MESSAGE_HISTORY_LIMIT, 0)
 
+
+class TestSummaryCommand(unittest.TestCase):
+    """Tests for summary command functionality."""
+    
+    def test_parse_time_filter(self):
+        """Test time filter parsing function."""
+        from tldw.commands import _parse_time_filter
+        from datetime import timedelta
+        
+        # Test valid formats
+        self.assertEqual(_parse_time_filter("1h"), timedelta(hours=1))
+        self.assertEqual(_parse_time_filter("30m"), timedelta(minutes=30))
+        self.assertEqual(_parse_time_filter("2h"), timedelta(hours=2))
+        
+        # Test invalid formats
+        self.assertIsNone(_parse_time_filter("invalid"))
+        self.assertIsNone(_parse_time_filter("1x"))
+        self.assertIsNone(_parse_time_filter(""))
+        
+    def test_split_response(self):
+        """Test response splitting function."""
+        from tldw.commands import _split_response
+        
+        # Test short response (no splitting needed)
+        short_text = "This is a short response."
+        result = _split_response(short_text, 100)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0], short_text)
+        
+        # Test long response that needs splitting
+        long_text = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
+        result = _split_response(long_text, 20)
+        self.assertGreater(len(result), 1)
+        
+    def test_message_range_hash(self):
+        """Test message range hash creation."""
+        from tldw.utils.message_utils import create_message_range_hash
+        from datetime import datetime
+        
+        # Test with sample messages
+        messages = [
+            {
+                'id': 123456789,
+                'content': 'Test message 1',
+                'channel_id': 987654321,
+                'created_at': datetime.now()
+            },
+            {
+                'id': 123456790,
+                'content': 'Test message 2', 
+                'channel_id': 987654321,
+                'created_at': datetime.now()
+            }
+        ]
+        
+        hash1 = create_message_range_hash(messages)
+        self.assertIsInstance(hash1, str)
+        self.assertEqual(len(hash1), 16)  # Should be 16 characters long
+        
+        # Same messages should produce same hash
+        hash2 = create_message_range_hash(messages)
+        self.assertEqual(hash1, hash2)
+        
+        # Different messages should produce different hash
+        different_messages = [
+            {
+                'id': 999999999,
+                'content': 'Different message',
+                'channel_id': 987654321,
+                'created_at': datetime.now()
+            }
+        ]
+        
+        hash3 = create_message_range_hash(different_messages)
+        self.assertNotEqual(hash1, hash3)
+        
+    def test_message_relevance_filtering(self):
+        """Test message relevance filtering."""
+        from tldw.utils.message_utils import filter_messages_by_relevance
+        from datetime import datetime
+        
+        messages = [
+            {
+                'content': 'This is a substantial message with good content for analysis',
+                'author': {'name': 'User1'},
+                'created_at': datetime.now()
+            },
+            {
+                'content': 'Short',  # Too short
+                'author': {'name': 'User2'},
+                'created_at': datetime.now()
+            },
+            {
+                'content': '!!!!!!!!!!',  # Mostly punctuation
+                'author': {'name': 'User3'},
+                'created_at': datetime.now()
+            },
+            {
+                'content': 'Another good message that should be included in analysis',
+                'author': {'name': 'User4'},
+                'created_at': datetime.now()
+            }
+        ]
+        
+        filtered = filter_messages_by_relevance(messages, min_length=15)
+        
+        # Should keep only the substantial messages
+        self.assertEqual(len(filtered), 2)
+        self.assertTrue(all('good' in msg['content'] or 'substantial' in msg['content'] 
+                          for msg in filtered))
+
+
+class TestTopicAnalysis(unittest.TestCase):
+    """Tests for topic analysis functionality."""
+    
+    def test_fallback_topic_identification(self):
+        """Test fallback topic identification using keyword frequency."""
+        from tldw.services.topic_analysis_service import _fallback_topic_identification
+        from datetime import datetime
+        
+        messages = [
+            {'content': 'Let\'s discuss Python programming and coding best practices', 'author': {'name': 'User1'}, 'created_at': datetime.now()},
+            {'content': 'Python is great for data science and machine learning', 'author': {'name': 'User2'}, 'created_at': datetime.now()},
+            {'content': 'I love Python programming, it\'s so versatile', 'author': {'name': 'User3'}, 'created_at': datetime.now()},
+            {'content': 'Docker containers are useful for deployment', 'author': {'name': 'User4'}, 'created_at': datetime.now()},
+            {'content': 'Docker makes development environments consistent', 'author': {'name': 'User5'}, 'created_at': datetime.now()},
+            {'content': 'Docker is essential for modern DevOps', 'author': {'name': 'User6'}, 'created_at': datetime.now()},
+        ]
+        
+        topics = _fallback_topic_identification(messages, max_topics=3)
+        
+        # Should identify topics based on keyword frequency
+        self.assertGreater(len(topics), 0)
+        self.assertLessEqual(len(topics), 3)
+        
+        # Should have required fields
+        for topic in topics:
+            self.assertIn('name', topic)
+            self.assertIn('description', topic)
+            self.assertIn('message_count', topic)
+            self.assertIn('keywords', topic)
+        
+    def test_prepare_messages_for_analysis(self):
+        """Test message preparation for AI analysis."""
+        from tldw.services.topic_analysis_service import _prepare_messages_for_analysis
+        from datetime import datetime
+        
+        messages = [
+            {
+                'content': 'Hello <@!123456789> check out <#987654321> channel',
+                'author': {'name': 'TestUser'},
+                'created_at': datetime(2024, 1, 1, 12, 0)
+            },
+            {
+                'content': 'Custom emoji test <:custom_emoji:123456>',
+                'author': {'name': 'AnotherUser'},
+                'created_at': datetime(2024, 1, 1, 12, 5)
+            }
+        ]
+        
+        formatted = _prepare_messages_for_analysis(messages)
+        
+        # Should format properly and clean mentions/emojis
+        self.assertIn('[12:00] TestUser:', formatted)
+        self.assertIn('@user', formatted)  # Mentions should be replaced
+        self.assertIn('#channel', formatted)  # Channel refs should be replaced
+        self.assertIn(':emoji:', formatted)  # Custom emojis should be replaced
+        # Verify original Discord formatting was replaced
+        self.assertNotIn('<@!123456789>', formatted)
+        self.assertNotIn('<#987654321>', formatted) 
+        self.assertNotIn('<:custom_emoji:123456>', formatted)
+
 if __name__ == "__main__":
     unittest.main()

@@ -6,8 +6,10 @@ A Discord bot that generates summaries of YouTube videos, web pages, and Twitter
 
 - **TLDW Command**: Extracts and summarizes YouTube video transcripts
 - **TLDR Command**: Summarizes web pages and Twitter threads
+- **Summary Command**: Analyzes recent conversation and generates topic-based summaries
 - **Adaptive Command Behavior**: Searches for links in previous messages if none is provided
-- **Multi-tier Caching System**: Redis cache with fallbacks, 24-hour expiration
+- **Multi-tier Caching System**: Redis cache with fallbacks, optimized TTL per command type
+- **Intelligent Rate Limiting**: Per-user and per-channel limits to prevent abuse
 
 ## Technology Stack
 
@@ -77,11 +79,25 @@ docker-compose down
 
 Once the bot is running and added to your Discord server, you can use the following commands:
 
-- `/tldw [url]`: Generate a summary of a YouTube video
-- `/tldr [url]`: Generate a summary of a web page or Twitter thread
-- `/info`: Display help information
+### Core Commands
 
-If you don't provide a URL, the bot will search for the last message with a relevant link.
+- `/tldw [url]` - Generate a summary of a YouTube video
+- `/tldr [url]` - Generate a summary of a web page or Twitter thread  
+- `/summary [count] [time_filter]` - Analyze recent conversation and generate topic-based summaries
+- `/info` - Display help information
+
+### Summary Command Examples
+
+- `/summary` - Analyze last 100 messages by topic
+- `/summary 50` - Analyze last 50 messages by topic
+- `/summary 100 2h` - Analyze last 100 messages from the past 2 hours
+- `/summary 150 30m` - Analyze last 150 messages from the past 30 minutes
+
+### Notes
+
+- If you don't provide a URL for `/tldw` or `/tldr`, the bot will search for the last message with a relevant link in the channel
+- The `/summary` command uses AI to identify conversation topics and provides structured summaries
+- Rate limits apply: 1 summary per user every 5 minutes, 1 per channel every 2 minutes
 
 ## Development
 

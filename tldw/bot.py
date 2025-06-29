@@ -7,7 +7,7 @@ from discord.ext import commands
 from discord import app_commands
 from dotenv import load_dotenv
 
-from tldw.commands import help_command, handle_tldw_command, handle_tldr_command
+from tldw.commands import help_command, handle_tldw_command, handle_tldr_command, handle_summary_command
 
 # Load environment variables
 load_dotenv()
@@ -93,6 +93,21 @@ async def tldr_slash(interaction: discord.Interaction, url: str = None):
     await interaction.response.defer()
     ctx_wrapper = DeferredContextWrapper(interaction)
     await handle_tldr_command(ctx_wrapper, url)
+
+# Legacy command
+@bot.command(name="summary")
+async def summary(ctx, count: int = 100, time_filter: str = None):
+    """Command handler for the summary command."""
+    await handle_summary_command(ctx, count, time_filter)
+
+# Slash command
+@bot.tree.command(name="summary", description="Generate a topic-based summary of recent conversation")
+async def summary_slash(interaction: discord.Interaction, count: int = 100, time_filter: str = None):
+    """Slash command handler for the summary command."""
+    # Defer response for longer processing
+    await interaction.response.defer()
+    ctx_wrapper = DeferredContextWrapper(interaction)
+    await handle_summary_command(ctx_wrapper, count, time_filter)
 
 def run_bot():
     """Run the Discord bot."""
