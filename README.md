@@ -58,7 +58,7 @@ A Discord bot that generates summaries of YouTube videos, web pages, and Twitter
 3. Build and run the containers with Docker Compose:
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 This will start the bot and a Redis server for caching in separate containers.
@@ -66,13 +66,13 @@ This will start the bot and a Redis server for caching in separate containers.
 To view the bot logs:
 
 ```bash
-docker-compose logs -f tldw-bot
+docker compose logs -f tldw-bot
 ```
 
 To stop the containers:
 
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ## Usage

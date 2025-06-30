@@ -26,9 +26,9 @@ uv run python -m unittest tests.py -v
 uv run pytest -v
 
 # Docker deployment (recommended)
-docker-compose up -d
-docker-compose logs -f tldw-bot
-docker-compose down
+docker compose up -d
+docker compose logs -f tldw-bot
+docker compose down
 ```
 
 ## Kubernetes Deployment
