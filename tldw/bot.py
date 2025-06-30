@@ -1,13 +1,17 @@
 """
 Main Discord bot implementation for TLDW.
+
+Refactored to use the modular command system with automatic command discovery.
 """
+
 import os
 import discord
 from discord.ext import commands
 from discord import app_commands
 from dotenv import load_dotenv
 
-from tldw.commands import help_command, handle_tldw_command, handle_tldr_command, handle_summary_command
+from .commands import registry
+from .commands.base import DeferredContextWrapper
 
 # Load environment variables
 load_dotenv()
@@ -24,25 +28,17 @@ intents.messages = True
 intents.guilds = True
 bot = commands.Bot(command_prefix="/", intents=intents)
 
-class DeferredContextWrapper:
-    """Wrapper for deferred Discord interactions compatible with legacy command handlers."""
-    def __init__(self, interaction):
-        self.interaction = interaction
-        self.author = interaction.user
-        self.channel = interaction.channel
-    
-    async def send(self, content):
-        try:
-            await self.interaction.followup.send(content)
-        except discord.errors.NotFound:
-            # If interaction expired, try to send to channel directly
-            if self.interaction.channel:
-                await self.interaction.channel.send(content)
 
 @bot.event
 async def on_ready():
     """Event handler for when the bot is ready."""
     print(f"{bot.user.name} has connected to Discord!")
+    
+    # Auto-discover and register commands
+    registry.auto_discover_commands()
+    
+    # Register slash commands manually (since they need specific parameter definitions)
+    await register_slash_commands()
     
     # Sync commands with Discord
     try:
@@ -52,66 +48,95 @@ async def on_ready():
     except Exception as e:
         print(f"Error syncing commands: {e}")
 
-# Legacy command
-@bot.command(name="info")
-async def info(ctx):
-    """Command handler for the information command."""
-    await ctx.send(help_command())
 
-# Slash command
-@bot.tree.command(name="info", description="Get information about the bot")
-async def info_slash(interaction: discord.Interaction):
-    """Slash command handler for the information command."""
-    await interaction.response.send_message(help_command())
+async def register_slash_commands():
+    """Register slash commands with specific parameter definitions."""
+    
+    # Info command (no parameters)
+    @bot.tree.command(name="info", description="Get information about the bot")
+    async def info_slash(interaction: discord.Interaction):
+        """Slash command handler for the info command."""
+        command = registry.get_command("info")
+        if command:
+            await interaction.response.defer()
+            ctx_wrapper = DeferredContextWrapper(interaction)
+            await command.execute_with_error_handling(ctx_wrapper)
+    
+    # TLDW command (optional URL parameter)
+    @bot.tree.command(name="tldw", description="Generate a summary of a YouTube video")
+    async def tldw_slash(interaction: discord.Interaction, url: str = None):
+        """Slash command handler for the TLDW command."""
+        command = registry.get_command("tldw")
+        if command:
+            await interaction.response.defer()
+            ctx_wrapper = DeferredContextWrapper(interaction)
+            await command.execute_with_error_handling(ctx_wrapper, url)
+    
+    # TLDR command (optional URL parameter)
+    @bot.tree.command(name="tldr", description="Generate a summary of a web page or Twitter thread")
+    async def tldr_slash(interaction: discord.Interaction, url: str = None):
+        """Slash command handler for the TLDR command."""
+        command = registry.get_command("tldr")
+        if command:
+            await interaction.response.defer()
+            ctx_wrapper = DeferredContextWrapper(interaction)
+            await command.execute_with_error_handling(ctx_wrapper, url)
+    
+    # Summary command (optional count and time_filter parameters)
+    @bot.tree.command(name="summary", description="Generate a topic-based summary of recent conversation")
+    async def summary_slash(interaction: discord.Interaction, count: int = 100, time_filter: str = None):
+        """Slash command handler for the summary command."""
+        command = registry.get_command("summary")
+        if command:
+            await interaction.response.defer()
+            ctx_wrapper = DeferredContextWrapper(interaction)
+            await command.execute_with_error_handling(ctx_wrapper, count, time_filter)
 
-# Legacy command
-@bot.command(name="tldw")
-async def tldw(ctx, url: str = None):
-    """Command handler for the TLDW command."""
-    await handle_tldw_command(ctx, url)
 
-# Slash command
-@bot.tree.command(name="tldw", description="Generate a summary of a YouTube video")
-async def tldw_slash(interaction: discord.Interaction, url: str = None):
-    """Slash command handler for the TLDW command."""
-    # Defer response for longer processing
-    await interaction.response.defer()
-    ctx_wrapper = DeferredContextWrapper(interaction)
-    await handle_tldw_command(ctx_wrapper, url)
+def register_legacy_commands():
+    """Register legacy commands dynamically."""
+    
+    # Info command
+    @bot.command(name="info")
+    async def info_legacy(ctx):
+        """Legacy command handler for the info command."""
+        command = registry.get_command("info")
+        if command:
+            await command.execute_with_error_handling(ctx)
+    
+    # TLDW command
+    @bot.command(name="tldw")
+    async def tldw_legacy(ctx, url: str = None):
+        """Legacy command handler for the TLDW command."""
+        command = registry.get_command("tldw")
+        if command:
+            await command.execute_with_error_handling(ctx, url)
+    
+    # TLDR command
+    @bot.command(name="tldr")
+    async def tldr_legacy(ctx, url: str = None):
+        """Legacy command handler for the TLDR command."""
+        command = registry.get_command("tldr")
+        if command:
+            await command.execute_with_error_handling(ctx, url)
+    
+    # Summary command
+    @bot.command(name="summary")
+    async def summary_legacy(ctx, count: int = 100, time_filter: str = None):
+        """Legacy command handler for the summary command."""
+        command = registry.get_command("summary")
+        if command:
+            await command.execute_with_error_handling(ctx, count, time_filter)
 
-# Legacy command
-@bot.command(name="tldr")
-async def tldr(ctx, url: str = None):
-    """Command handler for the TLDR command."""
-    await handle_tldr_command(ctx, url)
 
-# Slash command
-@bot.tree.command(name="tldr", description="Generate a summary of a web page or Twitter thread")
-async def tldr_slash(interaction: discord.Interaction, url: str = None):
-    """Slash command handler for the TLDR command."""
-    # Defer response for longer processing
-    await interaction.response.defer()
-    ctx_wrapper = DeferredContextWrapper(interaction)
-    await handle_tldr_command(ctx_wrapper, url)
+# Register legacy commands at module level
+register_legacy_commands()
 
-# Legacy command
-@bot.command(name="summary")
-async def summary(ctx, count: int = 100, time_filter: str = None):
-    """Command handler for the summary command."""
-    await handle_summary_command(ctx, count, time_filter)
-
-# Slash command
-@bot.tree.command(name="summary", description="Generate a topic-based summary of recent conversation")
-async def summary_slash(interaction: discord.Interaction, count: int = 100, time_filter: str = None):
-    """Slash command handler for the summary command."""
-    # Defer response for longer processing
-    await interaction.response.defer()
-    ctx_wrapper = DeferredContextWrapper(interaction)
-    await handle_summary_command(ctx_wrapper, count, time_filter)
 
 def run_bot():
     """Run the Discord bot."""
     bot.run(TOKEN)
+
 
 if __name__ == "__main__":
     run_bot()

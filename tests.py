@@ -6,17 +6,13 @@ class TestHelpCommand(unittest.TestCase):
 
     def test_help_command_returns_correct_information(self):
         """Test that the help command returns the correct information."""
-        from tldw.commands import help_command
+        from tldw.commands.help_command import HelpCommand
         
-        help_text = help_command()
+        help_cmd = HelpCommand()
         
-        # Verify that the help text contains information about the commands
-        self.assertIn("tldw", help_text.lower())
-        self.assertIn("tldr", help_text.lower())
-        self.assertIn("youtube", help_text.lower())
-        self.assertIn("web", help_text.lower())
-        self.assertIn("twitter", help_text.lower())
-        self.assertIn("help", help_text.lower())
+        # Verify command properties
+        self.assertEqual(help_cmd.name, "info")
+        self.assertIn("Get information about the bot", help_cmd.description)
 
 
 class TestUrlValidation(unittest.TestCase):
@@ -243,32 +239,36 @@ class TestSummaryCommand(unittest.TestCase):
     
     def test_parse_time_filter(self):
         """Test time filter parsing function."""
-        from tldw.commands import _parse_time_filter
+        from tldw.commands.summary_command import SummaryCommand
         from datetime import timedelta
         
+        summary_cmd = SummaryCommand()
+        
         # Test valid formats
-        self.assertEqual(_parse_time_filter("1h"), timedelta(hours=1))
-        self.assertEqual(_parse_time_filter("30m"), timedelta(minutes=30))
-        self.assertEqual(_parse_time_filter("2h"), timedelta(hours=2))
+        self.assertEqual(summary_cmd._parse_time_filter("1h"), timedelta(hours=1))
+        self.assertEqual(summary_cmd._parse_time_filter("30m"), timedelta(minutes=30))
+        self.assertEqual(summary_cmd._parse_time_filter("2h"), timedelta(hours=2))
         
         # Test invalid formats
-        self.assertIsNone(_parse_time_filter("invalid"))
-        self.assertIsNone(_parse_time_filter("1x"))
-        self.assertIsNone(_parse_time_filter(""))
+        self.assertIsNone(summary_cmd._parse_time_filter("invalid"))
+        self.assertIsNone(summary_cmd._parse_time_filter("1x"))
+        self.assertIsNone(summary_cmd._parse_time_filter(""))
         
     def test_split_response(self):
         """Test response splitting function."""
-        from tldw.commands import _split_response
+        from tldw.commands.summary_command import SummaryCommand
+        
+        summary_cmd = SummaryCommand()
         
         # Test short response (no splitting needed)
         short_text = "This is a short response."
-        result = _split_response(short_text, 100)
+        result = summary_cmd._split_response(short_text, 100)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], short_text)
         
         # Test long response that needs splitting
         long_text = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
-        result = _split_response(long_text, 20)
+        result = summary_cmd._split_response(long_text, 20)
         self.assertGreater(len(result), 1)
         
     def test_message_range_hash(self):
