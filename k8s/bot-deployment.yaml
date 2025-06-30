@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tldw-bot
+  namespace: tldw-bot
+  labels:
+    app: tldw-discord-bot
+    component: bot
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: tldw-discord-bot
+      component: bot
+  template:
+    metadata:
+      labels:
+        app: tldw-discord-bot
+        component: bot
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: tldw-bot
+        image: tldw-discord-bot:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: health
+          protocol: TCP
+        env:
+        # Secrets
+        - name: DISCORD_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: tldw-secrets
+              key: discord-token
+        - name: GOOGLE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: tldw-secrets
+              key: google-api-key
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: tldw-secrets
+              key: redis-password
+        # ConfigMap values
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: tldw-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: tldw-config
+              key: REDIS_PORT
+        - name: CACHE_EXPIRATION_HOURS
+          valueFrom:
+            configMapKeyRef:
+              name: tldw-config
+              key: CACHE_EXPIRATION_HOURS
+        - name: MESSAGE_HISTORY_LIMIT
+          valueFrom:
+            configMapKeyRef:
+              name: tldw-config
+              key: MESSAGE_HISTORY_LIMIT
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: tldw-config
+              key: LOG_LEVEL
+        - name: LOG_FORMAT
+          valueFrom:
+            configMapKeyRef:
+              name: tldw-config
+              key: LOG_FORMAT
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 3
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 15"]
+      terminationGracePeriodSeconds: 30

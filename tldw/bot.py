@@ -5,6 +5,8 @@ Refactored to use the modular command system with automatic command discovery.
 """
 
 import os
+import signal
+import sys
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -12,9 +14,14 @@ from dotenv import load_dotenv
 
 from .commands import registry
 from .commands.base import DeferredContextWrapper
+from .health import start_health_server, stop_health_server
+from .logging_config import setup_logging, get_logger
 
 # Load environment variables
 load_dotenv()
+
+# Setup logging
+logger = setup_logging()
 
 # Get the Discord token
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -32,7 +39,10 @@ bot = commands.Bot(command_prefix="/", intents=intents)
 @bot.event
 async def on_ready():
     """Event handler for when the bot is ready."""
-    print(f"{bot.user.name} has connected to Discord!")
+    logger.info(f"{bot.user.name} has connected to Discord!")
+    
+    # Start health check server
+    start_health_server()
     
     # Auto-discover and register commands
     registry.auto_discover_commands()
@@ -42,11 +52,11 @@ async def on_ready():
     
     # Sync commands with Discord
     try:
-        print("Syncing commands with Discord...")
+        logger.info("Syncing commands with Discord...")
         await bot.tree.sync()
-        print("Commands synced successfully!")
+        logger.info("Commands synced successfully!")
     except Exception as e:
-        print(f"Error syncing commands: {e}")
+        logger.error(f"Error syncing commands: {e}")
 
 
 async def register_slash_commands():
@@ -133,9 +143,26 @@ def register_legacy_commands():
 register_legacy_commands()
 
 
+def signal_handler(signum, frame):
+    """Handle shutdown signals gracefully."""
+    logger.info(f"Received signal {signum}, shutting down gracefully...")
+    stop_health_server()
+    sys.exit(0)
+
+
 def run_bot():
     """Run the Discord bot."""
-    bot.run(TOKEN)
+    # Register signal handlers for graceful shutdown
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+    
+    try:
+        logger.info("Starting TLDW Discord bot...")
+        bot.run(TOKEN)
+    except KeyboardInterrupt:
+        logger.info("Bot stopped by user")
+    finally:
+        stop_health_server()
 
 
 if __name__ == "__main__":

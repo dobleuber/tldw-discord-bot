@@ -31,6 +31,38 @@ docker-compose logs -f tldw-bot
 docker-compose down
 ```
 
+## Kubernetes Deployment
+
+```bash
+# Build and push image
+docker build -t your-registry/tldw-discord-bot:latest .
+docker push your-registry/tldw-discord-bot:latest
+
+# Create secrets
+kubectl create secret generic tldw-secrets \
+  --from-literal=discord-token="YOUR_DISCORD_TOKEN" \
+  --from-literal=google-api-key="YOUR_GOOGLE_API_KEY" \
+  --from-literal=redis-password="YOUR_REDIS_PASSWORD" \
+  --namespace=tldw-bot
+
+# Deploy to Kubernetes
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -k k8s/
+
+# Check deployment
+kubectl get all -n tldw-bot
+kubectl logs -n tldw-bot deployment/tldw-bot -f
+
+# Scale (bot should stay at 1 replica)
+kubectl scale deployment tldw-bot --replicas=1 -n tldw-bot
+
+# Update image
+kubectl set image deployment/tldw-bot tldw-bot=your-registry/tldw-discord-bot:new-tag -n tldw-bot
+
+# Cleanup
+kubectl delete namespace tldw-bot
+```
+
 ## Architecture
 
 ### Core Structure

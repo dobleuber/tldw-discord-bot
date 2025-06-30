@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: tldw-discord-bot
+  
+namespace: tldw-bot
+
+resources:
+- namespace.yaml
+- configmap.yaml
+- secrets.yaml
+- redis-service.yaml
+- redis-statefulset.yaml
+- bot-service.yaml
+- bot-deployment.yaml
+
+commonLabels:
+  app.kubernetes.io/name: tldw-discord-bot
+  app.kubernetes.io/version: "0.1.0"
+  app.kubernetes.io/managed-by: kustomize
+
+images:
+- name: tldw-discord-bot
+  newTag: latest

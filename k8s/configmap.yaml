@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tldw-config
+  namespace: tldw-bot
+  labels:
+    app: tldw-discord-bot
+data:
+  # Redis configuration
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  
+  # Cache configuration
+  CACHE_EXPIRATION_HOURS: "24"
+  
+  # Bot configuration
+  MESSAGE_HISTORY_LIMIT: "5"
+  
+  # Logging configuration
+  LOG_LEVEL: "INFO"
+  LOG_FORMAT: "json"
