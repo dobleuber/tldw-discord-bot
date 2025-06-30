@@ -176,7 +176,7 @@ class TestTLDWCommand:
         
         # Mock the list_models function to return our test model
         mock_model_obj = MagicMock()
-        mock_model_obj.name = "models/gemini-2.0-flash"
+        mock_model_obj.name = "models/gemini-2.5-flash-preview-04-17"
         mock_model_obj.supported_generation_methods = ["generateContent"]
         
         # Mock the Gemini AI functionality for testing
@@ -199,7 +199,7 @@ class TestTLDWCommand:
             mock_model.generate_content_async.assert_called_once()
             
             # Verify the model was created with the correct model name
-            mock_genai.assert_called_once_with("models/gemini-2.0-flash")
+            mock_genai.assert_called_once_with("models/gemini-2.5-flash-preview-04-17")
 
 
 class TestMessageUtils(unittest.TestCase):

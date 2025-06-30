@@ -19,3 +19,6 @@ data:
   # Logging configuration
   LOG_LEVEL: "INFO"
   LOG_FORMAT: "json"
+  
+  # Gemini AI configuration
+  GEMINI_MODEL: "models/gemini-2.5-flash-preview-04-17"

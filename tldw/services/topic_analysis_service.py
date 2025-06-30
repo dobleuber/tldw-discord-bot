@@ -40,7 +40,8 @@ async def identify_conversation_topics(messages: List[Dict[str, Any]], max_topic
     
     try:
         setup_gemini()
-        model = genai.GenerativeModel("models/gemini-2.0-flash")
+        model_name = os.getenv("GEMINI_MODEL", "models/gemini-2.5-flash-preview-04-17")
+        model = genai.GenerativeModel(model_name)
         
         prompt = f"""Analyze the following Discord conversation and identify the main topics discussed.
 
@@ -97,7 +98,8 @@ async def summarize_topic_messages(topic: Dict[str, Any], related_messages: List
     
     try:
         setup_gemini()
-        model = genai.GenerativeModel("models/gemini-2.0-flash")
+        model_name = os.getenv("GEMINI_MODEL", "models/gemini-2.5-flash-preview-04-17")
+        model = genai.GenerativeModel(model_name)
         
         # Prepare messages for summarization
         messages_text = _prepare_messages_for_analysis(related_messages)

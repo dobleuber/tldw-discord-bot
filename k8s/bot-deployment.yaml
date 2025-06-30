@@ -80,6 +80,11 @@ spec:
             configMapKeyRef:
               name: tldw-config
               key: LOG_FORMAT
+        - name: GEMINI_MODEL
+          valueFrom:
+            configMapKeyRef:
+              name: tldw-config
+              key: GEMINI_MODEL
         resources:
           requests:
             memory: "256Mi"

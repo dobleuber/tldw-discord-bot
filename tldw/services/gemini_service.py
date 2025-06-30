@@ -30,8 +30,8 @@ async def generate_summary_with_gemini(transcript: str) -> str:
     # Make sure Gemini AI is configured
     setup_gemini()
     
-    # Use the models/gemini-2.0-flash model specifically
-    model_name = "models/gemini-2.0-flash"
+    # Get model name from environment variable or use default
+    model_name = os.getenv("GEMINI_MODEL", "models/gemini-2.5-flash-preview-04-17")
     
     # Verify if the model is available
     available_models = []
