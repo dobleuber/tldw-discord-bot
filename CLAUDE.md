@@ -99,7 +99,7 @@ Required in `.env` file:
 - `REDIS_PORT` - Redis port (default: 6379)
 - `CACHE_EXPIRATION_HOURS` - Cache TTL (default: 24)
 - `MESSAGE_HISTORY_LIMIT` - Number of previous messages to search for URLs (default: 5)
-- `GEMINI_MODEL` - Gemini AI model to use (default: models/gemini-2.5-flash-preview-04-17)
+- `GEMINI_MODEL` - Gemini AI model to use (default: models/gemini-2.5-flash-lite-preview-06-17)
 
 ## Current Implementation Status
 

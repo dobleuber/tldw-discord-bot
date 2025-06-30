@@ -8,6 +8,9 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 import google.generativeai as genai
 
+# Default Gemini model to use
+DEFAULT_GEMINI_MODEL = "models/gemini-2.5-flash-lite-preview-06-17"
+
 def setup_gemini():
     """Configure the Gemini AI API.
     
@@ -40,7 +43,7 @@ async def identify_conversation_topics(messages: List[Dict[str, Any]], max_topic
     
     try:
         setup_gemini()
-        model_name = os.getenv("GEMINI_MODEL", "models/gemini-2.5-flash-preview-04-17")
+        model_name = os.getenv("GEMINI_MODEL", DEFAULT_GEMINI_MODEL)
         model = genai.GenerativeModel(model_name)
         
         prompt = f"""Analyze the following Discord conversation and identify the main topics discussed.
@@ -98,7 +101,7 @@ async def summarize_topic_messages(topic: Dict[str, Any], related_messages: List
     
     try:
         setup_gemini()
-        model_name = os.getenv("GEMINI_MODEL", "models/gemini-2.5-flash-preview-04-17")
+        model_name = os.getenv("GEMINI_MODEL", DEFAULT_GEMINI_MODEL)
         model = genai.GenerativeModel(model_name)
         
         # Prepare messages for summarization

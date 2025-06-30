@@ -21,4 +21,4 @@ data:
   LOG_FORMAT: "json"
   
   # Gemini AI configuration
-  GEMINI_MODEL: "models/gemini-2.5-flash-preview-04-17"
+  GEMINI_MODEL: "models/gemini-2.5-flash-lite-preview-06-17"

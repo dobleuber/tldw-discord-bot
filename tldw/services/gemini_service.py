@@ -4,6 +4,9 @@ Gemini AI service for generating summaries.
 import os
 import google.generativeai as genai
 
+# Default Gemini model to use
+DEFAULT_GEMINI_MODEL = "models/gemini-2.5-flash-lite-preview-06-17"
+
 def setup_gemini():
     """Configure the Gemini AI API.
     
@@ -31,7 +34,7 @@ async def generate_summary_with_gemini(transcript: str) -> str:
     setup_gemini()
     
     # Get model name from environment variable or use default
-    model_name = os.getenv("GEMINI_MODEL", "models/gemini-2.5-flash-preview-04-17")
+    model_name = os.getenv("GEMINI_MODEL", DEFAULT_GEMINI_MODEL)
     
     # Verify if the model is available
     available_models = []

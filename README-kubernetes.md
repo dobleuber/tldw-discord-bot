@@ -96,7 +96,7 @@ Configuration is managed through ConfigMap and Secrets:
 - `MESSAGE_HISTORY_LIMIT`: Messages to search (5)
 - `LOG_LEVEL`: Logging level (INFO)
 - `LOG_FORMAT`: Logging format (json for K8s)
-- `GEMINI_MODEL`: Gemini AI model (models/gemini-2.5-flash-preview-04-17)
+- `GEMINI_MODEL`: Gemini AI model (models/gemini-2.5-flash-lite-preview-06-17)
 
 **Secrets (k8s/secrets.yaml):**
 - `discord-token`: Discord bot authentication
